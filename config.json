@@ -1,0 +1,17 @@
+{
+    "downloadPath": "D:/Programming/Decom Towers/downloads",
+    "extractPath": "D:/Programming/Decom Towers/extract",
+    "ulsDataTypes": ["cell", "coast", "LMbcast", "LMcomm", "LMpriv", "market", "micro", "paging", "mdsitfs"],
+    "ulsRegUrl": "https://data.fcc.gov/download/pub/uls/complete/a_{{DATA_TYPE}}.zip",
+    "ulsLicUrl": "https://data.fcc.gov/download/pub/uls/complete/l_{{DATA_TYPE}}.zip",
+    "amUrl": "https://enterpriseefiling.fcc.gov/dataentry/api/download/dbfile/{{DATE}}/gis_am_ant_sys.zip",
+    "fmUrl": "https://enterpriseefiling.fcc.gov/dataentry/api/download/dbfile/{{DATE}}/gis_fm_eng_data.zip",
+    "tvUrl": "https://transition.fcc.gov/ftp/Bureaus/MB/Databases/cdbs/tv_eng_data.zip",
+    "asrLicensesUrl": "https://data.fcc.gov/download/pub/uls/complete/r_tower.zip",
+    "asrApplicationsUrl": "https://data.fcc.gov/download/pub/uls/complete/a_tower.zip",
+    "pgHost": "localhost",
+    "pgPort": "5432",
+    "pgUsername": "postgres",
+    "pgPassword": "pass",
+    "pgDatabase": "fcc_data"
+}
