@@ -46,7 +46,7 @@ const downloadFiles = async () => {
             console.log(`ULS ${config.ulsDataTypes[i]} Data Download Complete`);
         }
 
-        const asrDl = new DownloaderHelper(config.asrUrl, config.downloadPath);
+        const asrDl = new DownloaderHelper(config.asrLicensesUrl, config.downloadPath);
         await asrDl.start();
         console.log('ASR Data Download Complete');
     } catch (e) {
@@ -297,6 +297,7 @@ const createTables = async () => {
             status_code text COLLATE pg_catalog."default",
             status_date text COLLATE pg_catalog."default",
             earth_agree text COLLATE pg_catalog."default",
+            uls_datatype text COLLATE pg_catalog."default",
             location_point geometry(Point,2877)
         );
 
@@ -601,19 +602,23 @@ const uploadData = async () => {
 
     console.log("Deleted table data");
 
-    await config.ulsDataTypes.forEach(async (dataType) => {
+    for(let i = 0; i < config.ulsDataTypes.length; i++) {
         const copyUlsLocationRegistration = await pool.query(`
             COPY uls_locations (record_type,unique_system_identifier,uls_file_number,ebf_number,call_sign,location_action_performed,location_type_code,location_class_code,location_number,site_status,corresponding_fixed_location,location_address,location_city,location_county,location_state,radius_of_operation,area_of_operation_code,clearance_indicator,ground_elevation,lat_degrees,lat_minutes,lat_seconds,lat_direction,long_degrees,long_minutes,long_seconds,long_direction,max_lat_degrees,max_lat_minutes,max_lat_seconds,max_lat_direction,max_long_degrees,max_long_minutes,max_long_seconds,max_long_direction,nepa,quiet_zone_notification_date,tower_registration_number,height_of_support_structure,overall_height_of_structure,structure_type,airport_id,location_name,units_hand_held,units_mobile,units_temp_fixed,units_aircraft,units_itinerant,status_code,status_date,earth_agree) 
-            FROM '${config.extractPath}/l_${dataType}-LO.dat' DELIMITER '|'
+            FROM '${config.extractPath}/l_${config.ulsDataTypes[i]}-LO.dat' DELIMITER '|'
         `);
 
         const copyUlsLocationApplication = await pool.query(`
             COPY uls_locations (record_type,unique_system_identifier,uls_file_number,ebf_number,call_sign,location_action_performed,location_type_code,location_class_code,location_number,site_status,corresponding_fixed_location,location_address,location_city,location_county,location_state,radius_of_operation,area_of_operation_code,clearance_indicator,ground_elevation,lat_degrees,lat_minutes,lat_seconds,lat_direction,long_degrees,long_minutes,long_seconds,long_direction,max_lat_degrees,max_lat_minutes,max_lat_seconds,max_lat_direction,max_long_degrees,max_long_minutes,max_long_seconds,max_long_direction,nepa,quiet_zone_notification_date,tower_registration_number,height_of_support_structure,overall_height_of_structure,structure_type,airport_id,location_name,units_hand_held,units_mobile,units_temp_fixed,units_aircraft,units_itinerant,status_code,status_date,earth_agree) 
-            FROM '${config.extractPath}/a_${dataType}-LO.dat' DELIMITER '|'
+            FROM '${config.extractPath}/a_${config.ulsDataTypes[i]}-LO.dat' DELIMITER '|'
         `);
 
-        console.log(`Copied ${dataType} into DB`);
-    });
+        const updateUlsDataType = await pool.query(`
+            UPDATE uls_locations SET uls_datatype = '${config.ulsDataTypes[i]}' WHERE uls_datatype IS NULL;
+        `);
+
+        console.log(`Copied ${config.ulsDataTypes[i]} into DB`);
+    }
 
     const copyAmLocations = await pool.query(`
         COPY am_locations (am_dom_status,ant_dir_ind,ant_mode,any_sys_id,application_id,aug_count,augmented_ind,bad_data_switch,biased_lat,biased_long,domestic_pattern,dummy_data_switch,efficiency_restricted,efficiency_theoretical,eng_record_type,feed_circ_other,feed_circ_type,grandfathered_ind,hours_operation,last_update_date,lat_deg,lat_dir,lat_min,lat_sec,lat_whole_secs,lon_deg,lon_dir,lon_min,lon_sec,lon_whole_secs,mainkey,power,q_factor,q_factor_custom_ind,rms_augmented,rms_standard,rms_theoretical,specified_hrs_range,tower_count) 
