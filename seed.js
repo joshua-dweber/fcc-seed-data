@@ -49,6 +49,10 @@ const downloadFiles = async () => {
         const asrDl = new DownloaderHelper(config.asrLicensesUrl, config.downloadPath);
         await asrDl.start();
         console.log('ASR Data Download Complete');
+
+        const faaDl = new DownloaderHelper(config.faaUrl, config.extractPath, { fileName: "faa_dof.csv" });
+        await faaDl.start();
+        console.log("FAA Data Download Complete");
     } catch (e) {
         console.log(e);
     }
@@ -242,6 +246,43 @@ const createTables = async () => {
     `);
 
     console.log("Created ASR table");
+
+    const faaLocationsTable = await pool.query(`
+        CREATE TABLE IF NOT EXISTS public.faa_locations
+        (
+            x text COLLATE pg_catalog."default",
+            y text COLLATE pg_catalog."default",
+            objectid text COLLATE pg_catalog."default",
+            oas_number text COLLATE pg_catalog."default",
+            verified text COLLATE pg_catalog."default",
+            country text COLLATE pg_catalog."default",
+            state text COLLATE pg_catalog."default",
+            city text COLLATE pg_catalog."default",
+            lat_dms text COLLATE pg_catalog."default",
+            long_dms text COLLATE pg_catalog."default",
+            lat_dd text COLLATE pg_catalog."default",
+            long_dd text COLLATE pg_catalog."default",
+            type_code text COLLATE pg_catalog."default",
+            quantity text COLLATE pg_catalog."default",
+            agl text COLLATE pg_catalog."default",
+            amsl text COLLATE pg_catalog."default",
+            lighting text COLLATE pg_catalog."default",
+            horizontal text COLLATE pg_catalog."default",
+            vertical text COLLATE pg_catalog."default",
+            marking text COLLATE pg_catalog."default",
+            study text COLLATE pg_catalog."default",
+            action text COLLATE pg_catalog."default",
+            date text COLLATE pg_catalog."default",
+            location_point geometry(Point,2877)
+        );
+
+        CREATE INDEX IF NOT EXISTS faa_locations_point_idx
+            ON public.faa_locations USING gist
+            (location_point)
+            TABLESPACE pg_default;
+    `);
+
+    console.log("Created FAA table");
 
     const ulsLocationsTable = await pool.query(`
         CREATE TABLE IF NOT EXISTS public.uls_locations
@@ -598,6 +639,7 @@ const uploadData = async () => {
         DELETE FROM tv_locations;
         DELETE FROM asr_locations;
         DELETE FROM asr_registrations;
+        DELETE FROM faa_locations;
     `);
 
     console.log("Deleted table data");
@@ -654,6 +696,13 @@ const uploadData = async () => {
     `);
 
     console.log("Copied ASR registrations into DB");
+
+    const copyFaaLocations = await pool.query(`
+        COPY faa_locations (x,y,objectid,oas_number,verified,country,state,city,lat_dms,long_dms,lat_dd,long_dd,type_code,quantity,agl,amsl,lighting,horizontal,vertical,marking,study,action,date) 
+        FROM '${config.extractPath}/faa_dof.csv' DELIMITER ','
+    `);
+
+    console.log("Copied FAA locations into DB");
 }
 
 const cleanDB = async () => {
@@ -731,6 +780,13 @@ const cleanDB = async () => {
 
     console.log("Cleaned ASR locations");
 
+    const cleanFaaLocations = await pool.query(`
+        DELETE FROM faa_locations WHERE isnumeric(x) != true;
+        DELETE FROM faa_locations WHERE isnumeric(y) != true;
+    `);
+
+    console.log("Cleaned FAA locations");
+
     console.log("Finished deleting data with no location");
 
     const deleteAsrInfo = await pool.query(`DROP TABLE asr_registrations`);
@@ -767,6 +823,12 @@ const cleanDB = async () => {
 
     console.log("Added ULS location points");
 
+    const addFaaLocationPoints = await pool.query(`
+        UPDATE faa_locations SET location_point = transform_safe(ST_SetSRID(ST_MakePoint(x::numeric, y::numeric), 4326), 2877);
+    `);
+
+    console.log("Added FAA location points");
+
     console.log("Finished adding location points");
 
     const cleanAmLocations2 = await pool.query(`
@@ -798,6 +860,12 @@ const cleanDB = async () => {
     `);
 
     console.log("Finished cleaning ASR locations");
+
+    const cleanFaaLocations2 = await pool.query(`
+        DELETE FROM faa_locations WHERE location_point IS NULL;
+    `);
+
+    console.log("Finished cleaning FAA locations");
 
     console.log("Cleaning data all done");
 }

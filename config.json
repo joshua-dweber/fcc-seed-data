@@ -9,6 +9,7 @@
     "tvUrl": "https://transition.fcc.gov/ftp/Bureaus/MB/Databases/cdbs/tv_eng_data.zip",
     "asrLicensesUrl": "https://data.fcc.gov/download/pub/uls/complete/r_tower.zip",
     "asrApplicationsUrl": "https://data.fcc.gov/download/pub/uls/complete/a_tower.zip",
+    "faaUrl": "https://opendata.arcgis.com/api/v3/datasets/e202ff4e4cf943bda02ff63c0c44c9b7_0/downloads/data?format=csv&spatialRefId=4326&where=%28Country+IN+%28%27US%27%29%29+AND+%28Type_Code+IN+%28%27TOWER+++++++++++++%27%29%29",
     "pgHost": "localhost",
     "pgPort": "5432",
     "pgUsername": "postgres",
